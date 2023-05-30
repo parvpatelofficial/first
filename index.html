@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Split Bill</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Reset default browser styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fffff0;
+            background: linear-gradient(to bottom, #4FACFF, #4A32FF);
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .split-bill-section {
+            margin-bottom: 20px;
+        }
+        
+        .result-chart-section {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .result-section,
+        .chart-section {
+            flex-basis: 50%;
+            padding: 10px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        h1 .add-icon {
+            margin-left: 100px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            padding: 10px 20px;
+        }
+        
+        form {
+            width: 100%;
+        }
+        
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        label {
+            flex-basis: 20%;
+            font-weight: bold;
+            color: white;
+        }
+        
+        input[type='text'],
+        input[type='number'] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .add-person {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        
+        .add-person button {
+            background-color: #4682B4;
+            font-size: 20px;
+            padding: 5px 10px;
+            border-radius: 50%;
+        }
+        
+        h2 {
+            margin-top: 20px;
+            color: white;
+        }
+        
+        #result {
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        #result p {
+            margin-bottom: 10px;
+        }
+        
+        .remove-icon {
+            margin-right: 100px;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            padding: 10px 20px;
+        }
+        
+        .add-icon {
+            color: white;
+            cursor: pointer;
+        }
+        
+        #background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        
+        #chartContainer {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="split-bill-section">
+            <h1><span class="remove-icon" onclick="removePerson()">Remove person</span> Split Bill<span class="add-icon" onclick="addPerson()">Add person</span></h1>
+            <form id="splitForm">
+                <div class="form-group">
+                    <label for="name1">Name 1:</label>
+                    <input type="text" id="name1" name="name1">
+                    <label for="amount1">Amount 1:</label>
+                    <input type="number" id="amount1" name="amount1">
+                </div>
+                <div class="form-group">
+                    <label for="name2">Name 2:</label>
+                    <input type="text" id="name2" name="name2">
+                    <label for="amount2">Amount 2:</label>
+                    <input type="number" id="amount2" name="amount2">
+                </div>
+                <!-- Additional form groups can be dynamically added -->
+                <button type="button" onclick="splitBill()">Split</button>
+            </form>
+        </div>
+
+        <div class="result-chart-section">
+            <div class="result-section">
+                <h2>Result:</h2>
+                <div id="result"></div>
+            </div>
+
+            <div class="chart-section">
+                <div id="chartContainer" style="background-color:white">
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var personCount = 2;
+        var chart = null;
+
+        function addPerson() {
+            if (personCount < 100) {
+                personCount++;
+                var formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+
+                var nameLabel = document.createElement('label');
+                nameLabel.setAttribute('for', 'name' + personCount);
+                nameLabel.innerText = 'Name ' + personCount + ':';
+                formGroup.appendChild(nameLabel);
+
+                var nameInput = document.createElement('input');
+                nameInput.setAttribute('type', 'text');
+                nameInput.setAttribute('id', 'name' + personCount);
+                nameInput.setAttribute('name', 'name' + personCount);
+                formGroup.appendChild(nameInput);
+
+                var amountLabel = document.createElement('label');
+                amountLabel.setAttribute('for', 'amount' + personCount);
+                amountLabel.innerText = 'Amount ' + personCount + ':';
+                formGroup.appendChild(amountLabel);
+
+                var amountInput = document.createElement('input');
+                amountInput.setAttribute('type', 'number');
+                amountInput.setAttribute('id', 'amount' + personCount);
+                amountInput.setAttribute('name', 'amount' + personCount);
+                formGroup.appendChild(amountInput);
+
+                var splitForm = document.getElementById('splitForm');
+                splitForm.insertBefore(formGroup, splitForm.lastElementChild);
+
+                if (personCount === 100) {
+                    var addPersonButton = document.querySelector('.add-person button');
+                    addPersonButton.disabled = true;
+                }
+            }
+        }
+
+        function removePerson() {
+            if (personCount > 2) {
+                var splitForm = document.getElementById('splitForm');
+                var lastFormGroup = splitForm.lastElementChild.previousElementSibling;
+
+                if (lastFormGroup) {
+                    splitForm.removeChild(lastFormGroup);
+                    personCount--;
+
+                    var addPersonButton = document.querySelector('.add-person button');
+                    addPersonButton.disabled = false;
+                }
+            }
+        }
+
+        function splitBill() {
+            var total = 0;
+            var amounts = [];
+            var names = [];
+
+            for (var i = 1; i <= personCount; i++) {
+                var amountValue = document.getElementById('amount' + i).value;
+                if (amountValue) {
+                    total += parseFloat(amountValue);
+                    amounts.push(parseFloat(amountValue));
+                }
+
+                var nameValue = document.getElementById('name' + i).value;
+                names.push(nameValue);
+            }
+
+            var split = total / personCount;
+            var resultText = '';
+
+            for (var i = 0; i < amounts.length; i++) {
+                if (amounts[i] > split) {
+                    resultText += '<p>' + names[i] + ' gets back ' + (amounts[i] - split).toFixed(2) + '</p>';
+                } else if (amounts[i] < split) {
+                    resultText += '<p>' + names[i] + ' owes ' + (split - amounts[i]).toFixed(2) + '</p>';
+                } else {
+                    resultText += '<p>' + names[i] + ' is even.</p>';
+                }
+            }
+
+            document.getElementById('result').innerHTML = resultText;
+
+            // Generate polarArea chart data
+            var data = {
+                labels: names,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#9C27B0', '#FF9800', '#009688', '#FF5722', '#E91E63', '#3F51B5']
+                }]
+            };
+
+            // Update or create the chart
+            if (chart) {
+                chart.data = data;
+                chart.update();
+            } else {
+                var ctx = document.getElementById('chart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'polarArea',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
