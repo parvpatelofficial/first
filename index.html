@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Split Bill</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -53,7 +55,7 @@
         }
         
         h1 .add-icon {
-            margin-left: 100px;
+            margin-left: auto;
             font-size: 20px;
             background-color: #4CAF50;
             color: white;
@@ -131,12 +133,8 @@
             background-color: #f9f9f9;
         }
         
-        #result p {
-            margin-bottom: 10px;
-        }
-        
         .remove-icon {
-            margin-right: 100px;
+            margin-right: auto;
             color: white;
             cursor: pointer;
             font-size: 20px;
@@ -168,6 +166,43 @@
         #chartContainer {
             margin-top: 20px;
             text-align: center;
+        }
+
+        /* Mobile-friendly styles */
+        @media (max-width: 600px) {
+            .form-group {
+                flex-direction: column;
+            }
+
+            label {
+                flex-basis: auto;
+                margin-bottom: 5px;
+            }
+
+            input[type='text'],
+            input[type='number'] {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .add-person {
+                justify-content: flex-start;
+                margin-top: 10px;
+            }
+
+            .add-person button {
+                margin-left: 5px;
+            }
+
+            .result-chart-section {
+                flex-direction: column;
+            }
+
+            .result-section,
+            .chart-section {
+                flex-basis: 100%;
+                padding: 0;
+            }
         }
     </style>
 </head>
@@ -205,6 +240,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -268,21 +304,21 @@
             var total = 0;
             var amounts = [];
             var names = [];
-
+        
             for (var i = 1; i <= personCount; i++) {
                 var amountValue = document.getElementById('amount' + i).value;
-                if (amountValue) {
+                var nameValue = document.getElementById('name' + i).value;
+        
+                if (amountValue.trim() !== "" && nameValue.trim() !== "") {
                     total += parseFloat(amountValue);
                     amounts.push(parseFloat(amountValue));
+                    names.push(nameValue);
                 }
-
-                var nameValue = document.getElementById('name' + i).value;
-                names.push(nameValue);
             }
-
-            var split = total / personCount;
+        
+            var split = total / amounts.length;
             var resultText = '';
-
+        
             for (var i = 0; i < amounts.length; i++) {
                 if (amounts[i] > split) {
                     resultText += '<p>' + names[i] + ' gets back ' + (amounts[i] - split).toFixed(2) + '</p>';
@@ -292,9 +328,9 @@
                     resultText += '<p>' + names[i] + ' is even.</p>';
                 }
             }
-
+        
             document.getElementById('result').innerHTML = resultText;
-
+        
             // Generate polarArea chart data
             var data = {
                 labels: names,
@@ -303,26 +339,23 @@
                     backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#9C27B0', '#FF9800', '#009688', '#FF5722', '#E91E63', '#3F51B5']
                 }]
             };
-
+        
             // Update or create the chart
             if (chart) {
                 chart.data = data;
                 chart.update();
             } else {
-                var ctx = document.getElementById('chart').getContext('2d');
-                chart = new Chart(ctx, {
+                chart = new Chart(document.getElementById('chart'), {
                     type: 'polarArea',
                     data: data,
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
-                        legend: {
-                            position: 'bottom'
-                        }
+                        maintainAspectRatio: false
                     }
                 });
             }
         }
     </script>
+
 </body>
 </html>
